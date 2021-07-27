@@ -95,6 +95,21 @@ inline void __appendCookieItem(std::stringstream& ss, const char* sKey, const st
     auto fd = infoMap.find(sKey);
     if (fd != infoMap.end())
     {
+        //ss << (ss.str().empty() ? "" : ";") << fd->first << "=" << fd->second;
         ss << ";" << fd->first << "=" << fd->second;
+    }
+}
+
+inline void __fillCookieItems(std::stringstream& ss,  const std::map<std::string, std::string>& infoMap) {
+    for (auto & item : infoMap)
+    {
+        std::string skey = ";";
+        skey += item.first;
+        skey += "=";
+
+        if (ss.str().find(skey) == std::string::npos)
+        {
+            __appendCookieItem(ss, item.first.c_str(), infoMap);
+        }
     }
 }

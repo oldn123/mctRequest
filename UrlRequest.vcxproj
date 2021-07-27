@@ -38,7 +38,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -75,14 +75,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>G:\UrlRequest\libcurl-vc19-x86-release-dll-ssl-static\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>G:\UrlRequest\libcurl-vc19-x86-release-dll-ssl-static\include;E:\QAXEnt\public\360LPUB\dev\include\360ui\Unzip;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\lib;D:\sdk\zlib-1.2.11\build2015\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\include;D:\sdk\zlib-1.2.11;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\include;D:\sdk\zlib-1.2.11;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\lib;D:\sdk\zlib-1.2.11\build2015\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -95,10 +97,12 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>.\libcurl-vc19-x86-release-dll-ssl-static\include;.\Unzip;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>.\libcurl-vc19-x86-release-dll-ssl-static\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -141,8 +145,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -197,6 +202,7 @@
     <ClInclude Include="UrlConvert.h" />
     <ClInclude Include="UrlRequest.h" />
     <ClInclude Include="UrlRequestDlg.h" />
+    <ClInclude Include="util.h" />
     <ClInclude Include="writeData.h" />
   </ItemGroup>
   <ItemGroup>

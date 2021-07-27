@@ -126,14 +126,31 @@ END_MESSAGE_MAP()
 
 CUrlRequestDlg::CUrlRequestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_URLREQUEST_DIALOG, pParent)
-	, m_nRequestMode(0)
+	, m_nRequestMode(0), m_mr(this)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+void CUrlRequestDlg::Clear()
+{
+	m_msgInfo.clear();
+	::PostMessage(GetDlgItem(IDC_EDIT_RET)->GetSafeHwnd(), WM_SETTEXT, 0, (LPARAM)m_msgInfo.c_str());
 }
 
 void CUrlRequestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+}
+
+void CUrlRequestDlg::AppendMsg(const std::string& s)
+{
+	USES_CONVERSION;
+	CStringA ss = s.c_str();
+	ss.Replace("\n", "\r\n");
+	m_msgInfo += A2T(ss);
+
+	//::PostMessage(GetDlgItem(IDC_EDIT_RET)->GetSafeHwnd(), WM_SETTEXT, 0, (LPARAM)m_msgInfo.c_str());
+	SetDlgItemText(IDC_EDIT_RET, m_msgInfo.c_str());
 }
 
 BEGIN_MESSAGE_MAP(CUrlRequestDlg, CDialogEx)
@@ -142,6 +159,9 @@ BEGIN_MESSAGE_MAP(CUrlRequestDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDOK, &CUrlRequestDlg::OnBnClickedOk)
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BUTTON_LOGIN, &CUrlRequestDlg::OnBnClickedButtonLogin)
+	ON_BN_CLICKED(IDC_BUTTON_ADDCART, &CUrlRequestDlg::OnBnClickedButtonAddcart)
+	ON_BN_CLICKED(IDC_BUTTON_CHECKOUT, &CUrlRequestDlg::OnBnClickedButtonCheckout)
 END_MESSAGE_MAP()
 
 
@@ -180,8 +200,11 @@ BOOL CUrlRequestDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 
-	SetDlgItemText(IDC_EDIT_URL, L"http://knlotto.co.kr/");
-	CheckDlgButton(IDC_RADIO2, 1);
+	USES_CONVERSION;
+    SetDlgItemText(IDC_EDIT_USERNAME, A2T(g_username));
+    SetDlgItemText(IDC_EDIT_PWD, A2T(g_userpsd));
+
+    SetDlgItemText(IDC_EDIT_PRODUCT, L"4530956155944");
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -336,14 +359,15 @@ bool DoRequest(std::string& strUrl, std::string& sRet)
 	return bError;
 }
 
-bool DoRequest2(string & sRet)
+bool CUrlRequestDlg::DoRequest2(std::string & sRet)
 {
-	
-	CMctRequest mr;
+	CMctRequest mr(this);
 
 	for (auto i =0; i < (int)RType::eEnd; i++)
 	{
-        mr.DoRequest((RType)i);
+		if (!mr.DoRequest((RType)i)) {
+			break;
+		}
 
 		if (i == (int)RType::eCheckouts_contact_info)
 		{
@@ -450,6 +474,8 @@ void CUrlRequestDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
 
+	return;
+
 	CString sTips;
 	sTips.Format(L"req--idx:%d", g_nPageIdx);
 	SetWindowText(sTips);
@@ -489,4 +515,46 @@ void CUrlRequestDlg::OnTimer(UINT_PTR nIDEvent)
 		OnBnClickedOk();
 	}
 
+}
+
+
+void CUrlRequestDlg::OnBnClickedButtonLogin()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString su;
+	CString sw;
+
+	GetDlgItemText(IDC_EDIT_USERNAME, su);
+	GetDlgItemText(IDC_EDIT_PWD, sw);
+	
+	USES_CONVERSION;
+	m_mr.SetLoginInfo(W2A(su), W2A(sw));
+	m_mr.DoRequest(RType::eLogin);
+	m_mr.DoRequest(RType::eAccount);
+}
+
+
+void CUrlRequestDlg::OnBnClickedButtonAddcart()
+{
+	// TODO: 在此添加控件通知处理程序代码
+
+    CString sp;
+
+    GetDlgItemText(IDC_EDIT_PRODUCT, sp);
+
+	USES_CONVERSION;	
+	m_mr.SetProductNum(T2A(sp));
+	m_mr.DoRequest(RType::eProduct);
+
+    m_mr.DoRequest(RType::eProduct);
+    m_mr.DoRequest(RType::eAddCart);
+    m_mr.DoRequest(RType::eCart);
+}
+
+
+void CUrlRequestDlg::OnBnClickedButtonCheckout()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	m_mr.DoRequest(RType::eCart2);
+	m_mr.DoRequest(RType::eCheckouts);
 }

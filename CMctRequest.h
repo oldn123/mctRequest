@@ -6,7 +6,7 @@
 #include <sstream>
 #include <mutex>
 #include <memory>
-
+#include <functional>
 using namespace std;
 
 
@@ -142,49 +142,24 @@ inline std::string __get_cookie_login() {
     g_sa_t = st;
 
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << t << ";_shopify_sa_p=; "
-        << "cart_sig=" << g_cart_sig
-        << "; cart_ver=gcp-us-east1%3A17; " 
-        << "_shopify_y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8; cart_currency=TWD; " 
-        << "_s=de050c49-4e45-4d9d-b36d-337268b939b6;_orig_referrer=; _shopify_sa_t=" << st << "01.700Z; " 
-        << "_y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8; _shopify_s=de050c49-4e45-4d9d-b36d-337268b939b6; " 
-        << "secure_customer_sig=; "
-        << "_secure_session_id=da6471849a193c0805a0c80bd06388db; " 
-        << "cart=" << g_cart;
+//     ss << "_landing_page=%2F; cart_ts=" << t << ";_shopify_sa_p=; "
+//         << "cart_sig=" << g_cart_sig
+//         << "; cart_ver=gcp-us-east1%3A17; " 
+//         << "_shopify_y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8; cart_currency=TWD; " 
+//         << "_s=de050c49-4e45-4d9d-b36d-337268b939b6;_orig_referrer=; _shopify_sa_t=" << st << "01.700Z; " 
+//         << "_y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8; _shopify_s=de050c49-4e45-4d9d-b36d-337268b939b6; " 
+//         << "secure_customer_sig=; "
+//         << "_secure_session_id=da6471849a193c0805a0c80bd06388db; " 
+//         << "cart=" << g_cart;
 
 
     return ss.str().c_str();
 }
 
 inline std::string __get_cookie_2(const std::map<std::string, std::string> & sInfo) {
+
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << g_cart_ts << ";_shopify_sa_p=;" << "cart_sig=" << sInfo.at("cart_sig") << ";\
-cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfo.at("_shopify_y") << "; cart_currency=" << sInfo.at("cart_currency") << "; _s=" << sInfo.at("_s") << ";\
-_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z; " << "_y=" << sInfo.at("_y") << "; _shopify_s=" << sInfo.at("_shopify_s") << "; secure_customer_sig=" << sInfo.at("\
-secure_customer_sig") << ";_secure_session_id=" << sInfo.at("_secure_session_id") << "; cart=" << g_cart;
-
-    /***
-    landing_page=%2F
-    cart_ts=1625411717
-    _shopify_sa_p=
-    cart_sig=f3a65f52bbd2b596b71282b6a9cf189c
-    cart_ver=gcp-us-east1%3A10
-    _shopify_y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8
-    cart_currency=TWD
-    _s=be6c0322-1931-4960-9ad2-f65fb3b502da
-    _orig_referrer=
-    _shopify_sa_t=2021-07-04T15%3A18%3A08.068Z
-    _y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8
-    _shopify_s=be6c0322-1931-4960-9ad2-f65fb3b502da
-    secure_customer_sig=
-    _secure_session_id=627c671f9db5c2fc3e61dc1d07b77d23
-    _checkout_queue_checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV6T0RKaU4yWXdZalF5T1dVeVkyWmhNREl5TWpoa04ySmpNV1psTURkbFlnWTZCa1ZVIiwiZXhwIjoiMjAyMS0wNy0wNFQxNTo1NjowMS43OTZaIiwicHVyIjoiY29va2llLl9jaGVja291dF9xdWV1ZV9jaGVja291dF90b2tlbiJ9fQ%3D%3D--33eed02c76188bed7fa8e39f22c5a07d513be4fe
-    _checkout_queue_token=AgKPdCOwCPUttu48oUPDnBFRr6HqdlZk1B8vVr3FGaDVbhXVFs3PTwaINGsNMjsi29GjL323MFYj842xABg-LvDSiovFP3kiBy0vX_md4FlhS2Mn1lI75Aj7BfJqfmOOG8xla1URHrPJGk1ocVXLBucveVPC5v_3h-xWXKi5kcXi46l1zjOSaDkGpQ%3D%3D
-    cart=575e78417499c9ea6000f4dac492fb89
-    _shopify_evids=pv%3D9109f96e9f95e738bf326ebfd98704afe155fd9b79b4549f39aca9bdc6c435b0
-
-    */
-
+    __fillCookieItems(ss, sInfo);
     return ss.str().c_str();
 }
 
@@ -194,37 +169,8 @@ inline std::string __get_cookie_3(std::map<RType, std::map<std::string, std::str
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoAccount = sInfoMap[RType::eAccount];
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << g_cart_ts 
-        << ";_shopify_sa_p=" 
-        << ";cart_sig=" << sInfoLogin.at("cart_sig") 
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoLogin.at("_shopify_y") 
-        << ";cart_currency=" << sInfoLogin.at("cart_currency") 
-        << ";_s=" << sInfoLogin.at("_s") 
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z" 
-        << ";_y=" << sInfoLogin.at("_y") 
-        << ";_shopify_s=" << sInfoLogin.at("_shopify_s") 
-        << ";secure_customer_sig=" << sInfoLogin.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << "; cart=" << g_cart;
-
+    __fillCookieItems(ss, sInfoLogin);
     return ss.str();
-    /** 
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626326298
-    cart_sig=3037dc3898de31ad430c6957d48cbdd8
-    cart_ver=gcp-us-east1%3A2
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=240d6d4cfabab7960c374388a1af44bc
-    cart=75d8899ff00149adcf33f4177c54afbe
-    _s=cf78d626-dd12-429b-8c6e-9ae3a9c1192a
-    _shopify_s=cf78d626-dd12-429b-8c6e-9ae3a9c1192a
-    _shopify_sa_t=2021-07-17T13%3A39%3A44.902Z
-    _shopify_sa_p=
-    _secure_session_id=549f2243aca9e39690c0e39893c5e6d6   
-    */
 }
 
 
@@ -233,43 +179,9 @@ inline std::string __get_cookie_4(std::map<RType, std::map<std::string, std::str
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoProduct = sInfoMap[RType::eProduct];
 
-    std::time_t t = std::time(0);
-    auto ptm = gmtime(&t);
-    char sbuf[64] = { 0 };
-    strftime(sbuf, 64, "%Y-%m-%d %H:%M:%S", ptm);
-    auto st = g_urlC.UrlEncode_GBK(sbuf);
-
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << g_cart_ts
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoLogin.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoLogin.at("_shopify_y")
-        << ";cart_currency=" << sInfoLogin.at("cart_currency")
-        << ";_s=" << sInfoProduct.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << st << "01.700Z"
-        << ";_y=" << sInfoLogin.at("_y")
-        << ";_shopify_s=" << sInfoProduct.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoLogin.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << "; cart=" << g_cart;
-    /**
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626326298
-    cart_sig=3037dc3898de31ad430c6957d48cbdd8
-    cart_ver=gcp-us-east1%3A2
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=240d6d4cfabab7960c374388a1af44bc
-    cart=75d8899ff00149adcf33f4177c54afbe
-    _s=ea2180e2-7d77-4d54-99fa-3b3615a6e1db
-    _shopify_s=ea2180e2-7d77-4d54-99fa-3b3615a6e1db
-    _shopify_sa_t=2021-07-17T14%3A19%3A12.272Z
-    _shopify_sa_p=
-    _secure_session_id=549f2243aca9e39690c0e39893c5e6d6
-    */
-
+    __fillCookieItems(ss, sInfoLogin);
+    __fillCookieItems(ss, sInfoProduct);
     return ss.str();
 }
 
@@ -277,36 +189,8 @@ inline std::string __get_cookie_5(std::map<RType, std::map<std::string, std::str
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoAddCart = sInfoMap[RType::eAddCart];
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << sInfoAddCart.at("cart_ts")
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoAddCart.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoAddCart.at("_shopify_y")
-        << ";cart_currency=" << sInfoAddCart.at("cart_currency")
-        << ";_s=" << sInfoAddCart.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoAddCart.at("_y")
-        << ";_shopify_s=" << sInfoAddCart.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoAddCart.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << "; cart=" << g_cart;
-    /**
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626531560
-    cart_sig=e974dcd084bdabf2d2fe6df8a9064051
-    cart_ver=gcp-us-east1%3A4
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=240d6d4cfabab7960c374388a1af44bc
-    cart=75d8899ff00149adcf33f4177c54afbe
-    _s=ea2180e2-7d77-4d54-99fa-3b3615a6e1db
-    _shopify_s=ea2180e2-7d77-4d54-99fa-3b3615a6e1db
-    _shopify_sa_t=2021-07-17T14%3A19%3A12.272Z
-    _shopify_sa_p=
-    _secure_session_id=549f2243aca9e39690c0e39893c5e6d6
-    */
-
+    __fillCookieItems(ss, sInfoLogin);
+    __fillCookieItems(ss, sInfoAddCart);
     return ss.str();
 }
 
@@ -314,40 +198,8 @@ inline std::string __get_cookie_6(std::map<RType, std::map<std::string, std::str
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoAddCart = sInfoMap[RType::eAddCart];
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << sInfoAddCart.at("cart_ts")
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoAddCart.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17"
-        << ";_shopify_y=" << sInfoAddCart.at("_shopify_y")
-        << ";cart_currency=" << sInfoAddCart.at("cart_currency")
-        << ";_s=" << sInfoAddCart.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoAddCart.at("_y")
-        << ";_shopify_s=" << sInfoAddCart.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoAddCart.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << "; cart=" << g_cart;
-    /**
-    _landing_page=%2F
-    cart_ts=1625411921
-    _shopify_sa_p=
-    cart_sig=3453f9870d8b7528ef2e722b8249a3a2
-    cart_ver=gcp-us-east1%3A12
-    _shopify_y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8
-    cart_currency=TWD
-    _s=be6c0322-1931-4960-9ad2-f65fb3b502da
-    _orig_referrer=
-    _shopify_sa_t=2021-07-04T15%3A20%3A09.337Z
-    _y=c6b56e5b-f3f4-4d57-a089-a46d12831dd8
-    _shopify_s=be6c0322-1931-4960-9ad2-f65fb3b502da
-    secure_customer_sig=e2145ac537cffe6326368ed2109fd5eb
-    _checkout_queue_checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV6T0RKaU4yWXdZalF5T1dVeVkyWmhNREl5TWpoa04ySmpNV1psTURkbFlnWTZCa1ZVIiwiZXhwIjoiMjAyMS0wNy0wNFQxNTo1NjowMS43OTZaIiwicHVyIjoiY29va2llLl9jaGVja291dF9xdWV1ZV9jaGVja291dF90b2tlbiJ9fQ%3D%3D--33eed02c76188bed7fa8e39f22c5a07d513be4fe
-    _secure_session_id=ce3fced9a48749c139854d52f0ade4ae
-    _checkout_queue_token=AgKPdCOwCPUttu48oUPDnBFRr6HqdlZk1B8vVr3FGaDVbhXVFs3PTwaINGsNMjsi29GjL323MFYj842xABg-LvDSiovFP3kiBy0vX_md4FlhS2Mn1lI75Aj7BfJqfmOOG8xla1URHrPJGk1ocVXLBucveVPC5v_3h-xWXKi5kcXi46l1zjOSaDkGpQ%3D%3D
-    cart=575e78417499c9ea6000f4dac492fb89
-    _shopify_evids=pv%3D13750cb944a7871563e929eefe9c015218103a7029b224819abc452eb92b361f
-    */
-
+    __fillCookieItems(ss, sInfoLogin);
+    __fillCookieItems(ss, sInfoAddCart);
     return ss.str();
 }
 
@@ -370,6 +222,8 @@ inline std::string __get_cookie_7(std::map<RType, std::map<std::string, std::str
         << "; cart=" << g_cart;
     __appendCookieItem(ss, "_checkout_queue_token", sInfoCart2);
     __appendCookieItem(ss, "_checkout_queue_checkout_token", sInfoCart2);
+
+    __fillCookieItems(ss, sInfoCart2);
 
     /**
     _landing_page=%2Fen%2Faccount%2Flogin
@@ -615,40 +469,23 @@ inline std::string __get_cookie_12(std::map<RType, std::map<std::string, std::st
 
 const char* encodeURI(const char* Str);
 
+class IReportMsg {
+
+public:
+    virtual void Clear() = 0;
+    virtual void AppendMsg(const string&) = 0;
+};
+
 class CMctRequest
 {
 public:
-    CMctRequest() {
+    CMctRequest(IReportMsg * p) {
+        m_fnAppendMsg = p;
         curl = nullptr;
         static std::once_flag of;
         std::call_once(of, []() {
             curl_global_init(CURL_GLOBAL_ALL);
             });
-
-        std::wstring ssa = L"✓";
-        auto ll = ssa.size();
-        std::string r = CUrlConvert::_utf16_to_utf8(ssa.c_str());
-        ll = r.size();
-        ll = r.length();
-
-        USES_CONVERSION;
-        wstringstream wss;
-        wss << L"-----------------------------7e50780f94\r\n" << L"Content-Disposition: form-data; name=\"form_type\"\r\n\r\n" << L"product" << L"\r\n"
-            << L"-----------------------------7e50780f94\r\n" << L"Content-Disposition: form-data; name=\"utf8\"\r\n\r\n" << L"✓" << L"\r\n"
-            << L"-----------------------------7e50780f94\r\n" << L"Content-Disposition: form-data; name=\"id\"\r\n\r\n" << L"32576981073969" << L"\r\n"
-            << L"-----------------------------7e50780f94\r\n" << L"Content-Disposition: form-data; name=\"quantity\"\r\n\r\n" << 1 << L"\r\n"
-            << L"-----------------------------7e50780f94\r\n" << L"Content-Disposition: form-data; name=\"add\"\r\n\r\n\r\n"
-            << L"-----------------------------7e50780f94\r\n" << L"Content-Disposition: form-data; name=\"event_id\"\r\n\r\n" << A2W(NewGuidString().c_str()) << L"\r\n"
-            << L"-----------------------------7e50780f94--\r\n";
-
-        r = CUrlConvert::_utf16_to_utf8(wss.str().c_str());
-        const char * ps = r.c_str();
-        auto l = r.size();
-        l = r.length();
-        l++;
-
-
-
     }
     ~CMctRequest() {
 
@@ -784,7 +621,7 @@ private:
         switch (rt)
         {
         case RType::eLogin:
-            ss << "form_type=customer_login&utf8=%E2%9C%93" << "&customer%5Bemail%5D=" << g_username << "&customer%5Bpassword%5D=" << g_userpsd;
+            ss << "form_type=customer_login&utf8=%E2%9C%93" << "&customer%5Bemail%5D=" << m_username << "&customer%5Bpassword%5D=" << m_psw;
             break;
         case RType::eAddCart:
             /**
@@ -906,7 +743,15 @@ private:
                 sVal = s_hostUrl;
                 break;
             case ReqAttiType::eCookie:
-                sVal = BuildCookie(rt);
+                {
+                    sVal = BuildCookie(rt);
+                    if (m_fnAppendMsg)
+                    {
+                        std::stringstream ss;
+                        ss << "\n**** send--cookies [" << (int32_t)rt << "] :\n" << sVal << "\n";
+                        m_fnAppendMsg->AppendMsg(ss.str());
+                    }
+                }
                 break;
             case ReqAttiType::eContent_Length:
                 sVal = to_string(spf.length());
@@ -949,7 +794,7 @@ private:
       // curl_easy_setopt(curl, CURLOPT_USERAGENT, g_rAtti[2].sValue);
     }
 
-    void OnDecodeResponse(RType rt, std::string & sResponse) {
+    bool OnDecodeResponse(RType rt, std::string & sResponse) {
 
         if (rt == RType::eCart2)
         {
@@ -968,28 +813,29 @@ private:
                 const string sf = m_shop_id + "/checkouts/";
                 const char* se = "\">";
                 g_cart_sid = _FindMidString(sResponse, sf.c_str(), se);
+
+                if (g_cart_sid.empty())
+                {
+                    return false;
+                }
             }
         }
         
         if (rt == RType::eProduct)
         {
-            {    
-                const char* sss = "(<span id=\"CartCount\">";
-                const char* se = "</span>)";
-                std::string snum = _FindMidString(sResponse, sss, se);
-                int32_t ii = atoi(snum.c_str());
-
-            }
-            {
-                const char* sss = "{\"currency\":\"TWD\",\"variantId\":";
-                const char* se = ",";
-                g_sPdciId = _FindMidString(sResponse, sss, se);
-            }
+            const char* sss = "{\"currency\":\"TWD\",\"variantId\":";
+            const char* se = ",";
+            g_sPdciId = _FindMidString(sResponse, sss, se);
         }    
 
         if (rt == RType::eCheckouts)
         {
-            m_authenticity_tokenMap[checkouts_step_type::eContact_information] = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+            auto sval = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+            if (sval.empty())
+            {
+                return false;
+            }
+            m_authenticity_tokenMap[checkouts_step_type::eContact_information] = sval;
         }
         else if (rt == RType::eCheckouts_contact_info)
         {
@@ -997,7 +843,12 @@ private:
         }
         else if (rt == RType::eCheckouts2)
         {
-            m_authenticity_tokenMap[checkouts_step_type::eShipping_method] = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+            auto sval = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+            if (sval.empty())
+            {
+                return false;
+            }
+            m_authenticity_tokenMap[checkouts_step_type::eShipping_method] = sval;
         }
         else if (rt == RType::eCheckouts2_shipping_method)
         {
@@ -1005,16 +856,32 @@ private:
         }
         else if (rt == RType::eCheckouts3)
         {
-            m_authenticity_tokenMap[checkouts_step_type::ePayment_method] = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+            auto sval = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+            if (sval.empty())
+            {
+                return false;
+            }
+            m_authenticity_tokenMap[checkouts_step_type::ePayment_method] = sval;
         }
         else if (rt == RType::eCheckouts3_payment_method)
         {
 
         }
 
+
+        return true;
+
     }
 
 public:
+    void    SetLoginInfo(char* su, char* spsd) {
+        m_username = su;
+        m_psw = spsd;
+    }
+
+    void    SetProductNum(char * sn) {
+        m_product_id = sn;
+    }
 
     void    DoRequestEPayInfo() {
 
@@ -1100,7 +967,7 @@ public:
 
     }
 
-    void DoRequest(RType rt) {
+    bool DoRequest(RType rt) {
         CWriteData wd;
         bool  bError = true;
 
@@ -1153,19 +1020,35 @@ public:
         }
         else
         {
+            if (m_fnAppendMsg)
+            {
+                std::stringstream ss;
+                ss << "**** recv--cookies [" << (int32_t)rt << "] :\n";
+                m_fnAppendMsg->AppendMsg(ss.str());
+            }
+
             struct curl_slist* cookies = NULL;
             curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
             int i = 1;
             auto & rMap = m_cookicMap_resp[rt];
             while (cookies)
-            {
-                auto sa = __split_string(cookies->data, '	');
-                rMap[sa[5]] = sa[6];
+            {      
+                auto sa = __split_string(CUrlConvert::UTF8ToGBK(cookies->data), '	');
+                rMap[sa[5]] = sa.size() > 6 ? sa[6] : "";
+
                 cookies = cookies->next;
                 i++;
+
+                if (m_fnAppendMsg)
+                {
+                    std::stringstream ss;
+                    ss << sa[5] << "=" << rMap[sa[5]] << "\n";
+                    m_fnAppendMsg->AppendMsg(ss.str());
+                }
             }
         }
 
+        bool bRet = false;
         if (bError)
         {
             wd.GetString(m_sResponse);
@@ -1177,12 +1060,13 @@ public:
             ssf << sPath << "..\\coo_" << (int)rt << ".dat";
             wd.WriteToFile(ssf.str().c_str());
 
-            OnDecodeResponse(rt, m_sResponse);
+            bRet = OnDecodeResponse(rt, m_sResponse);
         }
 
 
         curl_easy_cleanup(curl);
 
+        return bRet;
    }
 
     string GetResponse() {
@@ -1192,12 +1076,18 @@ public:
 private:
     CURL*           curl;
 
+    std::string     m_username = g_username;
+    std::string     m_psw = g_userpsd;
+
     std::string     m_shop_id;      //3623944241
-    std::string     m_product_id = "4530956597041";// "4530956155944";//"4530956593920";
+    std::string     m_product_id = "4530956155944";//"4530956593920";
     std::string     m_sResponse;
 
     std::map<checkouts_step_type, std::string>  m_authenticity_tokenMap;
     std::string     m_datashippingmethod;
     std::map<RType, std::map<std::string, std::string>>    m_cookicMap_resp;
+
+    RType           m_lastType = RType::eLogin;
+    IReportMsg *  m_fnAppendMsg = nullptr;
 };
 

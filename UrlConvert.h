@@ -80,14 +80,14 @@ public:
 
 
 
-private:
+public:
     // URL解码，解码为GBK
-    std::string URLDecode(std::string& strOrg);
+    static std::string URLDecode(std::string& strOrg);
     // URL编码，编码为GBK
-    std::string URLEncode(std::string& strOrg);
+    static std::string URLEncode(std::string& strOrg);
 
-    std::string GBKToUTF8(const std::string& strGBK);
-    std::string UTF8ToGBK(const std::string& strUTF8);
+    static std::string GBKToUTF8(const std::string& strGBK);
+    static std::string UTF8ToGBK(const std::string& strUTF8);
 };
 
 #endif //__URLCONVERT_H__
