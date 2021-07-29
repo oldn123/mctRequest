@@ -170,6 +170,10 @@ inline std::string __get_cookie_3(std::map<RType, std::map<std::string, std::str
     const std::map<std::string, std::string>& sInfoAccount = sInfoMap[RType::eAccount];
     std::stringstream ss;
     __fillCookieItems(ss, sInfoLogin);
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
     return ss.str();
 }
 
@@ -182,6 +186,10 @@ inline std::string __get_cookie_4(std::map<RType, std::map<std::string, std::str
     std::stringstream ss;
     __fillCookieItems(ss, sInfoLogin);
     __fillCookieItems(ss, sInfoProduct);
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
     return ss.str();
 }
 
@@ -543,18 +551,18 @@ private:
         {
         case RType::eLogin:
         case RType::eAccount:
-            return "https://mct.tokyo/en/account/login";
+            return "https://mct.tokyo/account/login";
             break;
         case RType::eProduct:
-            return "https://mct.tokyo/en";
+            return "https://mct.tokyo/";
             break;
         case RType::eAddCart:
         case RType::eCart:
-            return string("https://mct.tokyo/en/products/") + m_product_id;
+            return string("https://mct.tokyo/products/") + m_product_id;
             break;
         case RType::eCart2:
         case RType::eCheckouts:
-            return "https://mct.tokyo/en/cart";
+            return "https://mct.tokyo/cart";
             break;
         case RType::eCheckouts_contact_info:
         case RType::eCheckouts2:
@@ -823,9 +831,13 @@ private:
         
         if (rt == RType::eProduct)
         {
-            const char* sss = "{\"currency\":\"TWD\",\"variantId\":";
+            const char* sss = "\",\"variantId\":";
             const char* se = ",";
             g_sPdciId = _FindMidString(sResponse, sss, se);
+            if (g_sPdciId.empty())
+            {
+                AfxMessageBox(L"貌似商品不存在？");
+            }
         }    
 
         if (rt == RType::eCheckouts)
@@ -1053,14 +1065,16 @@ public:
         {
             wd.GetString(m_sResponse);
 
+            auto ssss = CUrlConvert::UTF8ToGBK(m_sResponse);
+
             char sPath[260] = { 0 };
             GetModuleFileNameA(nullptr, sPath, 260);
 
             stringstream ssf;
-            ssf << sPath << "..\\coo_" << (int)rt << ".dat";
+            ssf << sPath << "\\..\\coo_" << (int)rt << ".dat";
             wd.WriteToFile(ssf.str().c_str());
 
-            bRet = OnDecodeResponse(rt, m_sResponse);
+            bRet = OnDecodeResponse(rt, ssss);
         }
 
 

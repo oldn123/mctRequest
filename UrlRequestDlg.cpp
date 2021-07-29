@@ -544,8 +544,8 @@ void CUrlRequestDlg::OnBnClickedButtonAddcart()
 
 	USES_CONVERSION;	
 	m_mr.SetProductNum(T2A(sp));
-	m_mr.DoRequest(RType::eProduct);
 
+	m_mr.DoRequestEPayInfo();
     m_mr.DoRequest(RType::eProduct);
     m_mr.DoRequest(RType::eAddCart);
     m_mr.DoRequest(RType::eCart);

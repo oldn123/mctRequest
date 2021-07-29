@@ -95,8 +95,8 @@ inline void __appendCookieItem(std::stringstream& ss, const char* sKey, const st
     auto fd = infoMap.find(sKey);
     if (fd != infoMap.end())
     {
-        //ss << (ss.str().empty() ? "" : ";") << fd->first << "=" << fd->second;
-        ss << ";" << fd->first << "=" << fd->second;
+        ss << (ss.str().empty() ? "" : ";") << fd->first << "=" << fd->second;
+        //ss << ";" << fd->first << "=" << fd->second;
     }
 }
 
