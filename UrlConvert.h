@@ -27,9 +27,9 @@ public:
     ~CUrlConvert(void);
 
     // URL编码，编码为GBK
-    std::string UrlEncode_GBK(std::string strOrg);
+    static std::string UrlEncode_GBK(std::string strOrg);
     // URL编码，编码为UTF-8
-    std::string UrlEncode_UTF8(std::string strOrg);
+    static std::string UrlEncode_UTF8(std::string strOrg);
 
     // URL解码，解码为GBK
     std::string UrlDecode_GBK(std::string strOrg);

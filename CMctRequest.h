@@ -28,6 +28,8 @@ enum class RType
     eCheckouts2_shipping_method, 
     eCheckouts3,             //POST /3623944241/checkouts/382b7f0b429e2cfa02228d7bc1fe07eb HTTP/1.1
     eCheckouts3_payment_method,
+    eCheckouts_beforeProc,  //POST https://mct.tokyo/3623944241/checkouts/19dfc090eac2cb78033d0b99e1676e61 HTTP/1.1
+    eCheckouts_doProc,      //GET https://mct.tokyo/3623944241/checkouts/19dfc090eac2cb78033d0b99e1676e61/processing HTTP/1.1
     eEnd
 };
 
@@ -120,6 +122,7 @@ inline const char* g_username = "270081974@qq.com";
 inline const char* g_userpsd = "Qq890821";
 
 inline string          g_apaySessionSet;
+inline string          g_shopifysessions;
 inline std::string     g_cart_sid;     //382b7f0b429e2cfa02228d7bc1fe07eb
 
 inline CUrlConvert     g_urlC;
@@ -215,67 +218,17 @@ inline std::string __get_cookie_7(std::map<RType, std::map<std::string, std::str
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoCart2 = sInfoMap[RType::eCart2];
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << sInfoCart2.at("cart_ts")
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoCart2.at("cart_sig")
-        << ";cart_ver=" << sInfoCart2.at("cart_ver")
-        << ";_shopify_y=" << sInfoCart2.at("_shopify_y")
-        << ";cart_currency=" << sInfoCart2.at("cart_currency")
-        << ";_s=" << sInfoCart2.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoCart2.at("_y")
-        << ";_shopify_s=" << sInfoCart2.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoCart2.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << "; cart=" << g_cart;
+    __fillCookieItems(ss, sInfoLogin);
     __appendCookieItem(ss, "_checkout_queue_token", sInfoCart2);
     __appendCookieItem(ss, "_checkout_queue_checkout_token", sInfoCart2);
-
     __fillCookieItems(ss, sInfoCart2);
-
-    /**
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626532893
-    cart_sig=cb8c67b60f771992750512de23cd2c79
-    cart_ver=gcp-us-east1%3A5
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=d4ca5cc5f89149738e1d15d900be9b60
-    cart=75d8899ff00149adcf33f4177c54afbe
-    _s=ea2180e2-7d77-4d54-99fa-3b3615a6e1db
-    _shopify_s=ea2180e2-7d77-4d54-99fa-3b3615a6e1db
-    _shopify_sa_t=2021-07-17T14%3A19%3A26.692Z
-    _shopify_sa_p=
-    _secure_session_id=549f2243aca9e39690c0e39893c5e6d6
-    _checkout_queue_token=AhTzamI9jbkVKxCjFhJmL7uE4djUzRT0rtWvYLR9KN_2idDgGT8gPAfA2XlTHvbKnNCRdeTzdxWzv-UegsfuY7D6ASETBEiaXoLCFPsG15mbyA4GoEB7HJZCCn-df73C5gm_3h4Ept4EEiC4Kxg2dHw7LCtYo9f4MNVRURsmYdl1W4a0KTqr2MEzTA%3D%3D
-    _checkout_queue_checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMS0wNy0xN1QxNTo0MTozNC40MzhaIiwicHVyIjoiY29va2llLl9jaGVja291dF9xdWV1ZV9jaGVja291dF90b2tlbiJ9fQ%3D%3D--4a74657d096831846bb9d55f15ed77efb3783500
-    */
-
     return ss.str();
 }
 
 inline std::string __get_cookie_8(std::map<RType, std::map<std::string, std::string>>& sInfoMap) { //Checkouts_contact_info
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
-    const std::map<std::string, std::string>& sInfoAccount = sInfoMap[RType::eAccount];
     std::stringstream ss;
-    ss << "_landing_page=%2F; cart_ts=" << g_cart_ts
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoLogin.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoLogin.at("_shopify_y")
-        << ";cart_currency=" << sInfoLogin.at("cart_currency")
-        << ";_s=" << sInfoLogin.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoLogin.at("_y")
-        << ";_shopify_s=" << sInfoLogin.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoLogin.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << "; cart=" << g_cart;
-    /**
-
-    */
-
+    __fillCookieItems(ss, sInfoLogin);
     return ss.str();
 }
 
@@ -285,89 +238,35 @@ inline std::string __get_cookie_9(std::map<RType, std::map<std::string, std::str
     const std::map<std::string, std::string>& sInfoCheckouts = sInfoMap[RType::eCheckouts];
 
     std::stringstream ss;
-    ss  << "tracked_start_checkout=" << g_cart_sid
-        << "_landing_page=%2F; cart_ts=" << sInfoCart2.at("cart_ts")
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoCart2.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoCart2.at("_shopify_y")
-        << ";cart_currency=" << sInfoCart2.at("cart_currency")
-        << ";_s=" << sInfoCart2.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoCart2.at("_y")
-        << ";_shopify_s=" << sInfoCart2.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoCart2.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << ";apay-session-set=" << g_apaySessionSet
-        << "; cart=" << g_cart;
+    __fillCookieItems(ss, sInfoLogin);
+    __fillCookieItems(ss, sInfoCart2);
     __appendCookieItem(ss, "checkout", sInfoCheckouts);
     __appendCookieItem(ss, "checkout_token", sInfoCheckouts);
-
-    /**
-    checkout=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVU0WmpOalptRTJZemhrT0dWak16RTNNVEU0T0dGaU9XWXdORGhrT0dSbE5nWTZCa1ZVIiwiZXhwIjoiMjAyMS0wOC0wN1QxNDo0MjowNy43MDVaIiwicHVyIjoiY29va2llLmNoZWNrb3V0In19--b3f0a63a59fad383d4ee466dad4cede04337c09b
-    checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMi0wNy0xN1QxNDo0MjowNy43MDZaIiwicHVyIjoiY29va2llLmNoZWNrb3V0X3Rva2VuIn19--5449531c73acb7c04269a7dcaed9c12e1207639a
-    tracked_start_checkout=12467ba69204a9370947d358585ffcd0
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626532893
-    cart_sig=cb8c67b60f771992750512de23cd2c79
-    cart_ver=gcp-us-east1%3A5
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=d4ca5cc5f89149738e1d15d900be9b60
-    cart=75d8899ff00149adcf33f4177c54afbe
-    apay-session-set=7KRU%2BTamVT2Us1P0iaSwVk3elIxTpBMeQ3SWw2ehlYmGzj1LK1V6q6tcBSD2x%2BQ%3D
-    */
+    __fillCookieItems(ss, sInfoCheckouts);
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
     return ss.str();
 }
 
 inline std::string __get_cookie_10(std::map<RType, std::map<std::string, std::string>>& sInfoMap) { //Checkouts2-end
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoCart2 = sInfoMap[RType::eCart2];
-    const std::map<std::string, std::string>& sInfoCheckouts = sInfoMap[RType::eCheckouts];
     const std::map<std::string, std::string>& sInfoCheckouts2 = sInfoMap[RType::eCheckouts2];
 
     std::stringstream ss;
-    ss << "tracked_start_checkout=" << g_cart_sid
-        << "_landing_page=%2F; cart_ts=" << sInfoCart2.at("cart_ts")
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoCart2.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoCart2.at("_shopify_y")
-        << ";cart_currency=" << sInfoCart2.at("cart_currency")
-        << ";_s=" << sInfoCart2.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoCart2.at("_y")
-        << ";_shopify_s=" << sInfoCart2.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoCart2.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << ";apay-session-set=" << g_apaySessionSet
-        << "; cart=" << g_cart;
+    __fillCookieItems(ss, sInfoLogin);
+    __fillCookieItems(ss, sInfoCart2);
     __appendCookieItem(ss, "checkout", sInfoCheckouts2);
     __appendCookieItem(ss, "checkout_token", sInfoCheckouts2);
     __appendCookieItem(ss, "_checkout_queue_token", sInfoCheckouts2);
     __appendCookieItem(ss, "_checkout_queue_checkout_token", sInfoCheckouts2);
-    /*
-    checkout=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVU0WmpOalptRTJZemhrT0dWak16RTNNVEU0T0dGaU9XWXdORGhrT0dSbE5nWTZCa1ZVIiwiZXhwIjoiMjAyMS0wOC0wOFQxMjoyNzoyOC4wNTBaIiwicHVyIjoiY29va2llLmNoZWNrb3V0In19--5421e4f45c987f60315f6f45b53782084c1aa057
-    checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMi0wNy0xOFQxMjoyNzoyOC4wNTBaIiwicHVyIjoiY29va2llLmNoZWNrb3V0X3Rva2VuIn19--ef5b530f4b698261283c0c6bcc375d5794958454
-    tracked_start_checkout=12467ba69204a9370947d358585ffcd0
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626532893
-    cart_sig=cb8c67b60f771992750512de23cd2c79
-    cart_ver=gcp-us-east1%3A6
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=d4ca5cc5f89149738e1d15d900be9b60
-    cart=75d8899ff00149adcf33f4177c54afbe
-    _s=fcb6e6df-3636-4057-bfd7-f682cc03726e
-    _shopify_s=fcb6e6df-3636-4057-bfd7-f682cc03726e
-    _secure_session_id=1fbf8c87bf9b0fbc31613722f6a614fc
-    _checkout_queue_token=AnjQmE0JzqWC9o1MbyAsLleH5FlxJRu5M4Ytvsj3DDjcz_l5ZO7r53DeF59oVT_tDX3fl6JzcOw054p_p1o8QCEDvi6mmMbU8hfnzFDfUPKupkQDwFGyRkNi6Cz2qLUuQ8moPB25MVUVUvglqwBTEuAK71aXuptdFr1dpSovJIe_ww%3D%3D
-    _checkout_queue_checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMS0wNy0xOFQxMzoyNzoyOC42MTVaIiwicHVyIjoiY29va2llLl9jaGVja291dF9xdWV1ZV9jaGVja291dF90b2tlbiJ9fQ%3D%3D--a00903ec7ccb4356a51df01f204fcad3a28ff863
-    apay-session-set=7KRU%2BTamVT2Us1P0iaSwVk3elIxTpBMeQ3SWw2ehlYmGzj1LK1V6q6tcBSD2x%2BQ%3D
-
-    */
+    __fillCookieItems(ss, sInfoCheckouts2);
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
     return ss.str();
 }
 
@@ -377,48 +276,19 @@ inline std::string __get_cookie_11(std::map<RType, std::map<std::string, std::st
     const std::map<std::string, std::string>& sInfoCheckouts = sInfoMap[RType::eCheckouts];
     const std::map<std::string, std::string>& sInfoCheckouts2_shipping_m = sInfoMap[RType::eCheckouts2_shipping_method];
     std::stringstream ss;
-    ss  <<  "tracked_start_checkout=" << g_cart_sid
-        << "_landing_page=%2F; cart_ts=" << sInfoCart2.at("cart_ts")
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoCart2.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoCart2.at("_shopify_y")
-        << ";cart_currency=" << sInfoCart2.at("cart_currency")
-        << ";_s=" << sInfoCart2.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoCart2.at("_y")
-        << ";_shopify_s=" << sInfoCart2.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoCart2.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << ";apay-session-set=" << g_apaySessionSet
-        << "; cart=" << g_cart;
+
+    __fillCookieItems(ss, sInfoCart2);
+    __fillCookieItems(ss, sInfoLogin);
     __appendCookieItem(ss, "checkout", sInfoCheckouts2_shipping_m);
     __appendCookieItem(ss, "checkout_token", sInfoCheckouts2_shipping_m);
     __appendCookieItem(ss, "_checkout_queue_token", sInfoCheckouts);
     __appendCookieItem(ss, "_checkout_queue_checkout_token", sInfoCheckouts);
-    /**
-    checkout=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVU0WmpOalptRTJZemhrT0dWak16RTNNVEU0T0dGaU9XWXdORGhrT0dSbE5nWTZCa1ZVIiwiZXhwIjoiMjAyMS0wOC0wOFQxMjoyNzozMC4zMTJaIiwicHVyIjoiY29va2llLmNoZWNrb3V0In19--efc234ddad9d4cb8b6b9e64d3c97d736e93d2bea
-    checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMi0wNy0xOFQxMjoyNzozMC4zMTJaIiwicHVyIjoiY29va2llLmNoZWNrb3V0X3Rva2VuIn19--080764ee5dff44f868cc3e0789983bac3c090db6
-    tracked_start_checkout=12467ba69204a9370947d358585ffcd0
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626532893
-    cart_sig=cb8c67b60f771992750512de23cd2c79
-    cart_ver=gcp-us-east1%3A6
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=d4ca5cc5f89149738e1d15d900be9b60
-    cart=75d8899ff00149adcf33f4177c54afbe
-    _s=fcb6e6df-3636-4057-bfd7-f682cc03726e
-    _shopify_s=fcb6e6df-3636-4057-bfd7-f682cc03726e
-    _shopify_sa_t=2021-07-18T12%3A27%3A31.720Z
-    _shopify_sa_p=
-    _secure_session_id=1fbf8c87bf9b0fbc31613722f6a614fc
-    _checkout_queue_token=AnjQmE0JzqWC9o1MbyAsLleH5FlxJRu5M4Ytvsj3DDjcz_l5ZO7r53DeF59oVT_tDX3fl6JzcOw054p_p1o8QCEDvi6mmMbU8hfnzFDfUPKupkQDwFGyRkNi6Cz2qLUuQ8moPB25MVUVUvglqwBTEuAK71aXuptdFr1dpSovJIe_ww%3D%3D
-    _checkout_queue_checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMS0wNy0xOFQxMzoyNzoyOC42MTVaIiwicHVyIjoiY29va2llLl9jaGVja291dF9xdWV1ZV9jaGVja291dF90b2tlbiJ9fQ%3D%3D--a00903ec7ccb4356a51df01f204fcad3a28ff863
-    apay-session-set=7KRU%2BTamVT2Us1P0iaSwVk3elIxTpBMeQ3SWw2ehlYmGzj1LK1V6q6tcBSD2x%2BQ%3D
+    __fillCookieItems(ss, sInfoCheckouts2_shipping_m);
 
-    */
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
     return ss.str();
 }
 
@@ -426,54 +296,65 @@ inline std::string __get_cookie_11(std::map<RType, std::map<std::string, std::st
 inline std::string __get_cookie_12(std::map<RType, std::map<std::string, std::string>>& sInfoMap) { //Checkouts3-end
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoCart2 = sInfoMap[RType::eCart2];
-    const std::map<std::string, std::string>& sInfoCheckouts = sInfoMap[RType::eCheckouts];
     const std::map<std::string, std::string>& sInfoCheckouts3 = sInfoMap[RType::eCheckouts3];
     std::stringstream ss;
-    ss  << "tracked_start_checkout=" << g_cart_sid
-        << "_landing_page=%2F; cart_ts=" << sInfoCart2.at("cart_ts")
-        << ";_shopify_sa_p="
-        << ";cart_sig=" << sInfoCart2.at("cart_sig")
-        << ";cart_ver=gcp-us-east1%3A17; _shopify_y=" << sInfoCart2.at("_shopify_y")
-        << ";cart_currency=" << sInfoCart2.at("cart_currency")
-        << ";_s=" << sInfoCart2.at("_s")
-        << ";_orig_referrer=; _shopify_sa_t=" << g_sa_t << "01.700Z"
-        << ";_y=" << sInfoCart2.at("_y")
-        << ";_shopify_s=" << sInfoCart2.at("_shopify_s")
-        << ";secure_customer_sig=" << sInfoCart2.at("secure_customer_sig")
-        << ";_secure_session_id=" << sInfoLogin.at("_secure_session_id")
-        << ";apay-session-set=" << g_apaySessionSet
-        << "; cart=" << g_cart;
-    __appendCookieItem(ss, "checkout", sInfoCheckouts3);
-    __appendCookieItem(ss, "checkout_token", sInfoCheckouts3);
-    __appendCookieItem(ss, "_checkout_queue_token", sInfoCheckouts3);
-    __appendCookieItem(ss, "_checkout_queue_checkout_token", sInfoCheckouts3);
-    /**
-    checkout=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVU0WmpOalptRTJZemhrT0dWak16RTNNVEU0T0dGaU9XWXdORGhrT0dSbE5nWTZCa1ZVIiwiZXhwIjoiMjAyMS0wOC0wOFQxMjoyNzo1NS43NzlaIiwicHVyIjoiY29va2llLmNoZWNrb3V0In19--cd661e4f3c51fc6e21512a0ecebdf809df687cc9
-    checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMi0wNy0xOFQxMjoyNzo1NS43NzlaIiwicHVyIjoiY29va2llLmNoZWNrb3V0X3Rva2VuIn19--06361a3da756b7c0b9af40ec4a97bc1a28a3d5b4
-    tracked_start_checkout=12467ba69204a9370947d358585ffcd0
-    _landing_page=%2Fen%2Faccount%2Flogin
-    cart_ts=1626532893
-    cart_sig=cb8c67b60f771992750512de23cd2c79
-    cart_ver=gcp-us-east1%3A6
-    _shopify_y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    cart_currency=TWD
-    _orig_referrer=
-    _y=92ca714f-93c0-4a71-ad81-280a18083a4c
-    secure_customer_sig=d4ca5cc5f89149738e1d15d900be9b60
-    cart=75d8899ff00149adcf33f4177c54afbe
-    _s=fcb6e6df-3636-4057-bfd7-f682cc03726e
-    _shopify_s=fcb6e6df-3636-4057-bfd7-f682cc03726e
-    _shopify_sa_t=2021-07-18T12%3A27%3A31.720Z
-    _shopify_sa_p=
-    _secure_session_id=1fbf8c87bf9b0fbc31613722f6a614fc
-    _checkout_queue_token=Av5EKiURkRYQsWZJps96_AooD9aPJh3u3MDSBsTaXx8Qq3J7IbmsxEzEiQgG6gFT3grTJNI95xjpoI-a_UbAZ87DEPTM1KcKsH4ThqDAt_5R98v4aSpB2DVgacIrxtNYg9aai-3vNEroKSKEpyu8z4g6eSx1jIEFHdMZLEyV4i5iTw%3D%3D
-    _checkout_queue_checkout_token=eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaVV4TWpRMk4ySmhOamt5TURSaE9UTTNNRGswTjJRek5UZzFPRFZtWm1Oa01BWTZCa1ZVIiwiZXhwIjoiMjAyMS0wNy0xOFQxMzoyNzo1Ni4xNjFaIiwicHVyIjoiY29va2llLl9jaGVja291dF9xdWV1ZV9jaGVja291dF90b2tlbiJ9fQ%3D%3D--55790aefcd93546fbf63c3f20b9eb8d3f05dbdb5
-    apay-session-set=7KRU%2BTamVT2Us1P0iaSwVk3elIxTpBMeQ3SWw2ehlYmGzj1LK1V6q6tcBSD2x%2BQ%3D
-    */
+    __fillCookieItems(ss, sInfoCart2);
+    __fillCookieItems(ss, sInfoLogin);
+    __fillCookieItems(ss, sInfoCheckouts3);
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
+
     return ss.str();
 }
 
+inline std::string __get_cookie_beforeproc(std::map<RType, std::map<std::string, std::string>>& sInfoMap) { 
+    const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
+    const std::map<std::string, std::string>& sInfoCart2 = sInfoMap[RType::eCart2];
+    const std::map<std::string, std::string>& sInfoCheckouts3 = sInfoMap[RType::eCheckouts3];
+    const std::map<std::string, std::string>& sInfoCheckouts3_payment = sInfoMap[RType::eCheckouts3_payment_method];
+    std::stringstream ss;
+    __fillCookieItems(ss, sInfoCart2);
+    __fillCookieItems(ss, sInfoLogin);
+    __appendCookieItem(ss, "checkout", sInfoCheckouts3_payment);
+    __appendCookieItem(ss, "checkout_token", sInfoCheckouts3_payment);
+    __fillCookieItems(ss, sInfoCheckouts3);
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
+    return ss.str();
+}
 
+inline std::string __get_cookie_doproc(std::map<RType, std::map<std::string, std::string>>& sInfoMap) { 
+    const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
+    const std::map<std::string, std::string>& sInfoCart2 = sInfoMap[RType::eCart2];
+    const std::map<std::string, std::string>& sInfoCheckouts3 = sInfoMap[RType::eCheckouts3];
+    const std::map<std::string, std::string>& sInfoCheckouts_beforeProc = sInfoMap[RType::eCheckouts_beforeProc];
+    std::stringstream ss;
+
+    __appendCookieItem(ss, "_checkout_queue_token", sInfoCheckouts_beforeProc);
+    __appendCookieItem(ss, "checkout", sInfoCheckouts_beforeProc);
+    __appendCookieItem(ss, "checkout_token", sInfoCheckouts_beforeProc);
+    __appendCookieItem(ss, "_checkout_queue_checkout_token", sInfoCheckouts_beforeProc);
+
+    __appendCookieItem(ss, "_y", sInfoCheckouts_beforeProc);
+    __appendCookieItem(ss, "_shopify_y", sInfoCheckouts_beforeProc);
+    __appendCookieItem(ss, "_s", sInfoCheckouts_beforeProc);
+    __appendCookieItem(ss, "_shopify_s", sInfoCheckouts_beforeProc);
+
+    __fillCookieItems(ss, sInfoCart2);
+
+    __fillCookieItems(ss, sInfoLogin);
+
+    if (!g_apaySessionSet.empty())
+    {
+        ss << ";apay-session-set=" << g_apaySessionSet;
+    }
+
+    return ss.str();
+}
 
 const char* encodeURI(const char* Str);
 
@@ -483,6 +364,8 @@ public:
     virtual void Clear() = 0;
     virtual void AppendMsg(const string&) = 0;
 };
+
+inline const char* g_card_info_json = "{\"credit_card\":{\"number\":\"4616 7605 6150 0874\",\"name\":\"zhiyong wu\",\"month\":12,\"year\":2025,\"verification_value\":\"198\"},\"payment_session_scope\":\"mct.tokyo\"}";
 
 class CMctRequest
 {
@@ -494,6 +377,7 @@ public:
         std::call_once(of, []() {
             curl_global_init(CURL_GLOBAL_ALL);
             });
+
     }
     ~CMctRequest() {
 
@@ -513,7 +397,9 @@ private:
         {   RType::eCheckouts2, RMethod::ePost,  g_defht_post, "/%s/checkouts/%s"    },
         {   RType::eCheckouts2_shipping_method, RMethod::eGet,  g_defht_get & ~(uint32_t)ReqAttiType::eCache_Control, "/%s/checkouts/%s?previous_step=contact_information&step=shipping_method"    },
         {   RType::eCheckouts3, RMethod::ePost,  g_defht_post, "/%s/checkouts/%s"    },
-        {   RType::eCheckouts3_payment_method, RMethod::eGet,  g_defht_get & ~(uint32_t)ReqAttiType::eCache_Control, "/%s/checkouts/%s?previous_step=shipping_method&step=payment_method"    }
+        {   RType::eCheckouts3_payment_method, RMethod::eGet,  g_defht_get & ~(uint32_t)ReqAttiType::eCache_Control, "/%s/checkouts/%s?previous_step=shipping_method&step=payment_method"    },
+        {   RType::eCheckouts_beforeProc, RMethod::ePost,  g_defht_post, "/%s/checkouts/%s"    },
+        {   RType::eCheckouts_doProc, RMethod::eGet,  g_defht_get & ~(uint32_t)ReqAttiType::eCache_Control, "/%s/checkouts/%s/processing"    }
     };
 
     std::string BuildUrl(RType rt) {
@@ -529,6 +415,8 @@ private:
         case RType::eCheckouts2_shipping_method:
         case RType::eCheckouts3:
         case RType::eCheckouts3_payment_method:
+        case RType::eCheckouts_beforeProc:
+        case RType::eCheckouts_doProc:
             {
                 char sBuf[1024] = { 0 };
                 sprintf(sBuf, m_ri[(int)rt].sUrl, m_shop_id.c_str(), g_cart_sid.c_str());
@@ -542,6 +430,11 @@ private:
 
         stringstream ss;
         ss << s_https << s_hostUrl << s_l << su << s_http_ver;
+
+        if (rt == RType::eCheckouts3_payment_method)
+        {
+            m_shopfysparam = g_urlC.UrlEncode_UTF8(ss.str());
+        }
 
         return ss.str();
     }
@@ -566,6 +459,11 @@ private:
             break;
         case RType::eCheckouts_contact_info:
         case RType::eCheckouts2:
+        case RType::eCheckouts2_shipping_method:
+        case RType::eCheckouts3:
+        case RType::eCheckouts3_payment_method:
+        case RType::eCheckouts_beforeProc:
+        case RType::eCheckouts_doProc:
             return "https://mct.tokyo/";
             break;
         default:
@@ -614,6 +512,12 @@ private:
             break;
         case RType::eCheckouts3_payment_method:
             return __get_cookie_12(m_cookicMap_resp);
+            break;
+        case RType::eCheckouts_beforeProc:
+            return __get_cookie_beforeproc(m_cookicMap_resp);
+            break;
+        case RType::eCheckouts_doProc:
+            return __get_cookie_doproc(m_cookicMap_resp);
             break;
         case RType::eEnd:
             break;
@@ -720,6 +624,29 @@ private:
                 << "&checkout%5Bclient_details%5D%5Bbrowser_tz%5D=-480";
         }
         break;
+        case RType::eCheckouts_beforeProc:
+        {
+            ss << "_method=patch"
+                << "&authenticity_token=" << m_authenticity_tokenMap[checkouts_step_type::ePayment_method]
+                << "&previous_step=payment_method"
+                << "&step="
+                << "&s=" << g_shopifysessions
+                << "&checkout%5Bpayment_gateway%5D=" << m_data_select_gateway
+                << "&checkout%5Bcredit_card%5D%5Bvault%5D=false"
+                << "&checkout%5Bdifferent_billing_address%5D=false"
+                << "&checkout%5Bremember_me%5D="
+                << "&checkout%5Bremember_me%5D=0"
+                << "&="
+                << "&checkout%5Bvault_phone%5D="
+                << "&checkout%5Btotal_price%5D=" << m_payment
+                << "&complete=1"
+                << "&checkout%5Bclient_details%5D%5Bbrowser_width%5D=1005"
+                << "&checkout%5Bclient_details%5D%5Bbrowser_height%5D=961"
+                << "&checkout%5Bclient_details%5D%5Bjavascript_enabled%5D=1"
+                << "&checkout%5Bclient_details%5D%5Bcolor_depth%5D=24"
+                << "&checkout%5Bclient_details%5D%5Bjava_enabled%5D=true"
+                << "&checkout%5Bclient_details%5D%5Bbrowser_tz%5D=-480";
+        }
         default:
             break;
         }
@@ -877,7 +804,9 @@ private:
         }
         else if (rt == RType::eCheckouts3_payment_method)
         {
+            m_data_select_gateway = _FindMidString(sResponse, "data-select-gateway=\"", "\"");  
 
+            m_payment = _FindMidString(sResponse, "data-checkout-payment-due-target=\"", "\"");//" data-checkout-payment-due-target="
         }
 
 
@@ -893,6 +822,155 @@ public:
 
     void    SetProductNum(char * sn) {
         m_product_id = sn;
+    }
+
+    bool    DoRequest_S_before() {
+
+        CWriteData wd;
+        bool  bError = true;
+
+        curl = curl_easy_init();
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYHOST, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
+
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
+
+        if (m_bUseProxyAgent) { curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888"); }
+
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "OPTIONS");
+
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, "Access-Control-Request-Method: POST");
+        headers = curl_slist_append(headers, "Access-Control-Request-Headers: accept, content-type");
+        headers = curl_slist_append(headers, "Accept: */*");
+        headers = curl_slist_append(headers, "Origin: https://checkout.shopifycs.com");
+        headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
+        headers = curl_slist_append(headers, "Host: deposit.us.shopifycs.com");
+        headers = curl_slist_append(headers, "Connection: Keep-Alive");
+        headers = curl_slist_append(headers, "Cache-Control: no-cache");
+
+        std::stringstream ssLen;
+        ssLen << "Content-Length: 0";
+        headers = curl_slist_append(headers, ssLen.str().c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
+
+        std::string surl = "https://deposit.us.shopifycs.com/sessions";
+        curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
+
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
+
+
+        auto res = curl_easy_perform(curl);
+
+        if (CURLE_OK != res) {
+            fprintf(stderr, "curl told us %d\n", res);
+            bError = false;
+        }
+        else
+        {
+
+        }
+
+        if (bError)
+        {
+            wd.GetString(m_sResponse);
+        }
+
+        curl_easy_cleanup(curl);
+
+        return bError;
+    }
+
+    bool    DoRequest_S() {
+
+        CWriteData wd;
+        bool  bError = true;
+
+        curl = curl_easy_init();
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYHOST, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
+
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
+
+        if (m_bUseProxyAgent) { curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888"); }
+
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, "Accept-Language: zh-CN");
+        headers = curl_slist_append(headers, "content-type: application/json");
+        headers = curl_slist_append(headers, "Accept: application/json");
+        headers = curl_slist_append(headers, "Origin: https://checkout.shopifycs.com");
+        headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
+        headers = curl_slist_append(headers, "Host: deposit.us.shopifycs.com");
+        headers = curl_slist_append(headers, "Connection: Keep-Alive");
+        headers = curl_slist_append(headers, "Cache-Control: no-cache"); 
+
+        stringstream sref;
+        sref << "https://checkout.shopifycs.com/number?identifier=" << g_cart_sid
+            << "&location=" << m_shopfysparam
+            << "&dir=ltr";
+
+        std::stringstream ssLen;
+        ssLen << "Content-Length: " << strlen(g_card_info_json);
+        headers = curl_slist_append(headers, ssLen.str().c_str());
+
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        curl_easy_setopt(curl, CURLOPT_REFERER, sref.str().c_str());
+
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
+
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, g_card_info_json);
+        
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, 1);
+        curl_easy_setopt(curl, CURLOPT_POST, 1);
+        std::string surl = "https://deposit.us.shopifycs.com/sessions";
+        curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
+
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
+
+        auto res = curl_easy_perform(curl);
+
+        if (CURLE_OK != res) {
+            fprintf(stderr, "curl told us %d\n", res);
+            bError = false;
+        }
+        else
+        {
+
+        }
+
+        if (bError)
+        {
+            wd.GetString(m_sResponse);
+            //{"id":"east-85f2fccf01847d9d246c4573e52af376"}
+            const char* sf = "{\"id\":\"";
+            const char* se = "\"}";
+            g_shopifysessions = _FindMidString(m_sResponse, sf, se);
+        }
+
+        curl_easy_cleanup(curl);
+
+        return !g_shopifysessions.empty();
     }
 
     void    DoRequestEPayInfo() {
@@ -914,7 +992,7 @@ public:
 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
 
-        curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888");
+        if (m_bUseProxyAgent) { curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888"); }
 
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
 
@@ -925,6 +1003,9 @@ public:
         headers = curl_slist_append(headers, "Host: payments-fe.amazon.com");
         headers = curl_slist_append(headers, "Connection: Keep-Alive");
         headers = curl_slist_append(headers, "Accept: */*");
+
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
         curl_easy_setopt(curl, CURLOPT_REFERER, "https://mct.tokyo/");
 
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
@@ -998,8 +1079,7 @@ public:
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
 
  //       curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-
-         curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888");
+        if (m_bUseProxyAgent){ curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888");}
 
         BuildRequest(rt);
 
@@ -1087,6 +1167,9 @@ public:
         return m_sResponse;
     }
 
+    void    UseProxyAgent(bool b) {
+        m_bUseProxyAgent = b;
+    }
 private:
     CURL*           curl;
 
@@ -1097,11 +1180,18 @@ private:
     std::string     m_product_id = "4530956155944";//"4530956593920";
     std::string     m_sResponse;
 
+    std::string     m_data_select_gateway;
+    std::string     m_payment;
+
+    std::string     m_shopfysparam;
+
     std::map<checkouts_step_type, std::string>  m_authenticity_tokenMap;
     std::string     m_datashippingmethod;
     std::map<RType, std::map<std::string, std::string>>    m_cookicMap_resp;
 
     RType           m_lastType = RType::eLogin;
     IReportMsg *  m_fnAppendMsg = nullptr;
+
+    bool            m_bUseProxyAgent = true;
 };
 

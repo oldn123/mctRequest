@@ -162,6 +162,9 @@ BEGIN_MESSAGE_MAP(CUrlRequestDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_LOGIN, &CUrlRequestDlg::OnBnClickedButtonLogin)
 	ON_BN_CLICKED(IDC_BUTTON_ADDCART, &CUrlRequestDlg::OnBnClickedButtonAddcart)
 	ON_BN_CLICKED(IDC_BUTTON_CHECKOUT, &CUrlRequestDlg::OnBnClickedButtonCheckout)
+	ON_BN_CLICKED(IDC_BUTTON_CHECKOUT2, &CUrlRequestDlg::OnBnClickedButtonCheckout2)
+	ON_BN_CLICKED(IDC_BUTTON_CHECKOUT3, &CUrlRequestDlg::OnBnClickedButtonCheckout3)
+	ON_BN_CLICKED(IDC_BUTTON_CHECKOUT4, &CUrlRequestDlg::OnBnClickedButtonCheckout4)
 END_MESSAGE_MAP()
 
 
@@ -557,4 +560,32 @@ void CUrlRequestDlg::OnBnClickedButtonCheckout()
 	// TODO: 在此添加控件通知处理程序代码
 	m_mr.DoRequest(RType::eCart2);
 	m_mr.DoRequest(RType::eCheckouts);
+	m_mr.DoRequest(RType::eCheckouts_contact_info);
+}
+
+
+void CUrlRequestDlg::OnBnClickedButtonCheckout2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+    m_mr.DoRequest(RType::eCheckouts2);
+    m_mr.DoRequest(RType::eCheckouts2_shipping_method);
+}
+
+
+void CUrlRequestDlg::OnBnClickedButtonCheckout3()
+{
+	// TODO: 在此添加控件通知处理程序代码
+    m_mr.DoRequest(RType::eCheckouts3);
+    m_mr.DoRequest(RType::eCheckouts3_payment_method);
+}
+
+
+void CUrlRequestDlg::OnBnClickedButtonCheckout4()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (m_mr.DoRequest_S_before() && m_mr.DoRequest_S())
+	{
+		m_mr.DoRequest(RType::eCheckouts_beforeProc);
+		m_mr.DoRequest(RType::eCheckouts_doProc);
+	}
 }

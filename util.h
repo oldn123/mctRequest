@@ -91,25 +91,26 @@ inline std::string _FindMidString(const std::string& sResponse, const char* sBeg
     return "";
 }
 
-inline void __appendCookieItem(std::stringstream& ss, const char* sKey, const std::map<std::string, std::string>& infoMap) {
-    auto fd = infoMap.find(sKey);
-    if (fd != infoMap.end())
+inline void __appendCookieItem(std::stringstream& ss, const char* _sKey, const std::map<std::string, std::string>& infoMap) {
+
+    std::string skey = ";";
+    skey += _sKey;
+    skey += "=";
+
+    if (ss.str().find(skey) == std::string::npos)
     {
-        ss << (ss.str().empty() ? "" : ";") << fd->first << "=" << fd->second;
-        //ss << ";" << fd->first << "=" << fd->second;
+        auto fd = infoMap.find(_sKey);
+        if (fd != infoMap.end())
+        {
+            ss << (ss.str().empty() ? "" : ";") << fd->first << "=" << fd->second;
+            //ss << ";" << fd->first << "=" << fd->second;
+        }
     }
 }
 
 inline void __fillCookieItems(std::stringstream& ss,  const std::map<std::string, std::string>& infoMap) {
     for (auto & item : infoMap)
     {
-        std::string skey = ";";
-        skey += item.first;
-        skey += "=";
-
-        if (ss.str().find(skey) == std::string::npos)
-        {
-            __appendCookieItem(ss, item.first.c_str(), infoMap);
-        }
+        __appendCookieItem(ss, item.first.c_str(), infoMap);
     }
 }

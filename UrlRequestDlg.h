@@ -50,4 +50,7 @@ public:
 	afx_msg void OnBnClickedButtonLogin();
 	afx_msg void OnBnClickedButtonAddcart();
 	afx_msg void OnBnClickedButtonCheckout();
+	afx_msg void OnBnClickedButtonCheckout2();
+	afx_msg void OnBnClickedButtonCheckout3();
+	afx_msg void OnBnClickedButtonCheckout4();
 };
