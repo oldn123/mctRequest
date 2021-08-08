@@ -154,8 +154,6 @@ inline std::string __get_cookie_login() {
 //         << "secure_customer_sig=; "
 //         << "_secure_session_id=da6471849a193c0805a0c80bd06388db; " 
 //         << "cart=" << g_cart;
-
-
     return ss.str().c_str();
 }
 
@@ -327,6 +325,15 @@ inline std::string __get_cookie_beforeproc(std::map<RType, std::map<std::string,
     return ss.str();
 }
 
+inline std::string __get_cookie_throttle_cart2(std::map<RType, std::map<std::string, std::string>>& sInfoMap) {
+    const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
+    const std::map<std::string, std::string>& sInfoCart2 = sInfoMap[RType::eCart2];
+    std::stringstream ss;
+    __fillCookieItems(ss, sInfoCart2);
+    __fillCookieItems(ss, sInfoLogin);
+    return ss.str();
+}
+
 inline std::string __get_cookie_doproc(std::map<RType, std::map<std::string, std::string>>& sInfoMap) { 
     const std::map<std::string, std::string>& sInfoLogin = sInfoMap[RType::eLogin];
     const std::map<std::string, std::string>& sInfoCart2 = sInfoMap[RType::eCart2];
@@ -377,7 +384,6 @@ public:
         std::call_once(of, []() {
             curl_global_init(CURL_GLOBAL_ALL);
             });
-
     }
     ~CMctRequest() {
 
@@ -714,7 +720,6 @@ private:
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
         curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "d:\\123.txt");
-        //curl_easy_setopt(curl, CURLOPT_COOKIELIST, BuildCookie(rt).c_str());
 
         if (!spf.empty())
         {
@@ -722,11 +727,173 @@ private:
             curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, 1);
             curl_easy_setopt(curl, CURLOPT_POST, 1);
         }
+    }
+
+    CURL* _init_curl() {
+        curl = curl_easy_init();
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYHOST, FALSE);
+
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
+
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
+
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
+
+        if (m_bUseProxyAgent) { curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888"); }
+
+        return curl;
+    }
+
+    bool _request_throttle_cart2(std::string & sToken) {
+        CWriteData wd;
+        bool  bError = true;
+
+        auto curl = _init_curl();
+
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
+
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, "Host: mct.tokyo");
+        headers = curl_slist_append(headers, "Connection: keep-alive");
+        headers = curl_slist_append(headers, "Upgrade-Insecure-Requests: 1");
+        headers = curl_slist_append(headers, "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;");
+        headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
+        headers = curl_slist_append(headers, "Referer: https://mct.tokyo/cart");
+
+        curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "d:\\123.txt");
+
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+
+        std::string surl = "https://mct.tokyo/throttle/queue";
+        curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
+
+        auto cookies = __get_cookie_throttle_cart2(m_cookicMap_resp);
+        stringstream sss;
+        sss << "Cookie: " << cookies;
+        headers = curl_slist_append(headers, sss.str().c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        auto res = curl_easy_perform(curl);
+
+        if (CURLE_OK != res) {
+            fprintf(stderr, "curl told us %d\n", res);
+            bError = false;
+        }
+        else
+        {
+
+        }
+
+        if (bError)
+        {
+            wd.GetString(m_sResponse);
+
+            std::map<std::string, std::string>  cMap;
+            cookieToMap(curl, cMap);
+
+            auto & stoken = cMap.find("_checkout_queue_token");
+            if (stoken != cMap.end())
+            {
+                auto sv = g_urlC.UrlEncode_GBK(stoken->second);
+                sToken = sv;
+            }
+        }
+
+        curl_easy_cleanup(curl);
+
+        return bError;
+    }
+
+    std::string _make_poll_json(std::string & sToken) {
+        RAPIDJSON_NAMESPACE::StringBuffer ss;
+        RAPIDJSON_NAMESPACE::Writer<RAPIDJSON_NAMESPACE::StringBuffer> writer(ss);
+        writer.StartObject();
+
+        writer.Key("query");
+        writer.String("\n      {\n        poll(token: $token) {\n          token\n          pollAfter\n          queueEtaSeconds\n          productVariantAvailability {\n            id\n            available\n          }\n        }\n      }\n    ");
+        
+        writer.Key("variables");
+        writer.StartObject();
+        writer.Key("token");
+        writer.String(sToken.c_str());
+        writer.EndObject();
+
+        writer.EndObject();
+        return ss.GetString();
+    }
+
+    bool _request_poll(std::string & sToken) {
+        CWriteData wd;
+        bool  bError = true;
+
+        auto curl = _init_curl();
+
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
+
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, "Host: mct.tokyo");
+        headers = curl_slist_append(headers, "Connection: keep-alive");  
+        headers = curl_slist_append(headers, "Cache-Control: no-cache");
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        headers = curl_slist_append(headers, "Accept: */*");
+        headers = curl_slist_append(headers, "Accept-Encoding: gzip, deflate");
+        headers = curl_slist_append(headers, "Referer: https://mct.tokyo/throttle/queue");
+
+        auto sJson = _make_poll_json(sToken);
+
+        int32_t nContentLen = sJson.length();
+        stringstream ss;
+        ss << "Content-Length: " << nContentLen;
+        headers = curl_slist_append(headers, ss.str().c_str());
+
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+
+        std::string surl = "https://mct.tokyo/queue/poll";
+        curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, sJson.c_str());
+
+        stringstream sss;
+        sss << "Cookie: " << __get_cookie_throttle_cart2(m_cookicMap_resp).c_str();
+        headers = curl_slist_append(headers, sss.str().c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+        auto res = curl_easy_perform(curl);
+
+        if (CURLE_OK != res) {
+            fprintf(stderr, "curl told us %d\n", res);
+            bError = false;
+        }
+        else
+        {
+
+        }
+
+        if (bError)
+        {
+            wd.GetString(m_sResponse);
+        }
+
+        curl_easy_cleanup(curl);
+
+        return bError;
+    }
 
 
-      //  curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-    
-      // curl_easy_setopt(curl, CURLOPT_USERAGENT, g_rAtti[2].sValue);
+
+    void _thread_checking() {
+
+        std::string sToken;
+        _request_throttle_cart2(sToken);
+
+        _request_poll(sToken);
+
     }
 
     bool OnDecodeResponse(RType rt, std::string & sResponse) {
@@ -738,6 +905,20 @@ private:
                 const char* sf = "<a href=\"https://mct.tokyo/";
                 const char* se = "/checkouts/";
                 m_shop_id = _FindMidString(sResponse, sf, se);
+            }
+
+            if (m_shop_id.empty())
+            {
+                const char* sf = "<html><body>You are being <a href=\"";
+                const char* se = "\">";
+                auto sk = _FindMidString(sResponse, sf, se);
+                if (sk == "https://mct.tokyo/throttle/queue")
+                {
+                    m_keepchecking = sk;
+
+                    std::thread thChecking(&CMctRequest::_thread_checking, this);
+                    thChecking.detach();
+                }
             }
 
             if (g_cart_sid.empty())
@@ -792,6 +973,16 @@ private:
         else if (rt == RType::eCheckouts2_shipping_method)
         {
             m_datashippingmethod = _FindMidString(sResponse, " data-shipping-method=\"", "\">");
+
+            if (!m_authenticity_tokenMap.count(checkouts_step_type::eShipping_method))
+            {
+                auto sval = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+                if (sval.empty())
+                {
+                    return false;
+                }
+                m_authenticity_tokenMap[checkouts_step_type::eShipping_method] = sval;
+            }
         }
         else if (rt == RType::eCheckouts3)
         {
@@ -807,6 +998,16 @@ private:
             m_data_select_gateway = _FindMidString(sResponse, "data-select-gateway=\"", "\"");  
 
             m_payment = _FindMidString(sResponse, "data-checkout-payment-due-target=\"", "\"");//" data-checkout-payment-due-target="
+
+            if (!m_authenticity_tokenMap.count(checkouts_step_type::ePayment_method))
+            {
+                auto sval = _FindMidString(sResponse, "name=\"authenticity_token\" value=\"", "\" ");
+                if (sval.empty())
+                {
+                    return false;
+                }
+                m_authenticity_tokenMap[checkouts_step_type::ePayment_method] = sval;
+            }
         }
 
 
@@ -829,21 +1030,9 @@ public:
         CWriteData wd;
         bool  bError = true;
 
-        curl = curl_easy_init();
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
+        curl = _init_curl();
 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
-
-        if (m_bUseProxyAgent) { curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888"); }
 
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "OPTIONS");
 
@@ -862,13 +1051,8 @@ public:
         headers = curl_slist_append(headers, ssLen.str().c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
-
         std::string surl = "https://deposit.us.shopifycs.com/sessions";
         curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
-
 
         auto res = curl_easy_perform(curl);
 
@@ -896,21 +1080,9 @@ public:
         CWriteData wd;
         bool  bError = true;
 
-        curl = curl_easy_init();
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
+        curl = _init_curl();
 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
-
-        if (m_bUseProxyAgent) { curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888"); }
 
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
 
@@ -937,16 +1109,12 @@ public:
 
         curl_easy_setopt(curl, CURLOPT_REFERER, sref.str().c_str());
 
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
-
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, g_card_info_json);
         
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, 1);
         curl_easy_setopt(curl, CURLOPT_POST, 1);
         std::string surl = "https://deposit.us.shopifycs.com/sessions";
         curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
 
         auto res = curl_easy_perform(curl);
 
@@ -978,21 +1146,9 @@ public:
         CWriteData wd;
         bool  bError = true;
 
-        curl = curl_easy_init();
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
+        curl = _init_curl();
 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
-
-        if (m_bUseProxyAgent) { curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888"); }
 
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
 
@@ -1008,13 +1164,8 @@ public:
 
         curl_easy_setopt(curl, CURLOPT_REFERER, "https://mct.tokyo/");
 
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
-
         std::string surl = "https://payments-fe.amazon.com/gp/widgets/sessionstabilizer?countryOfEstablishment=JP&ledgerCurrency=JPY&isSandbox=false";
         curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
-
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
-
 
         auto res = curl_easy_perform(curl);
 
@@ -1025,17 +1176,6 @@ public:
         }
         else
         {
-            //             struct curl_slist* cookies = NULL;
-            //             curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
-            //             int i = 1;
-            //             auto& rMap = m_cookicMap_resp[rt];
-            //             while (cookies)
-            //             {
-            //                 auto sa = __split_string(cookies->data, '	');
-            //                 rMap[sa[5]] = sa[6];
-            //                 cookies = cookies->next;
-            //                 i++;
-            //             }
         }
 
         if (bError)
@@ -1060,29 +1200,37 @@ public:
 
     }
 
+    void cookieToMap(CURL * curl, std::map<string, string> & rMap) {
+        struct curl_slist* cookies = NULL;
+        curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
+        int i = 1;
+        while (cookies)
+        {
+            auto sa = __split_string(CUrlConvert::UTF8ToGBK(cookies->data), '	');
+            rMap[sa[5]] = sa.size() > 6 ? sa[6] : "";
+
+            cookies = cookies->next;
+            i++;
+
+            if (m_fnAppendMsg)
+            {
+                std::stringstream ss;
+                ss << sa[5] << "=" << rMap[sa[5]] << "\n";
+                m_fnAppendMsg->AppendMsg(ss.str());
+            }
+        }
+
+    }
+
     bool DoRequest(RType rt) {
         CWriteData wd;
         bool  bError = true;
 
-        curl = curl_easy_init();
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYPEER, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_PROXY_SSL_VERIFYHOST, FALSE);
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
+        curl = _init_curl();
 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&wd);
 
- //       curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-        if (m_bUseProxyAgent){ curl_easy_setopt(curl, CURLOPT_PROXY, "127.0.0.1:8888");}
-
         BuildRequest(rt);
-
 
         if (m_ri[(int32_t)rt].rm == RMethod::eGet)
         {
@@ -1094,15 +1242,9 @@ public:
         }
 
         curl_easy_setopt(curl, CURLOPT_REFERER, BuildReferer(rt).c_str());
-
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko");
  
         std::string surl = BuildUrl(rt);
         curl_easy_setopt(curl, CURLOPT_URL, surl.c_str());
-
-       // curl_easy_setopt(curl, CURLOPT_TRAILERFUNCTION, true);
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, true);
-
 
         auto res = curl_easy_perform(curl);
 
@@ -1119,25 +1261,8 @@ public:
                 m_fnAppendMsg->AppendMsg(ss.str());
             }
 
-            struct curl_slist* cookies = NULL;
-            curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
-            int i = 1;
-            auto & rMap = m_cookicMap_resp[rt];
-            while (cookies)
-            {      
-                auto sa = __split_string(CUrlConvert::UTF8ToGBK(cookies->data), '	');
-                rMap[sa[5]] = sa.size() > 6 ? sa[6] : "";
-
-                cookies = cookies->next;
-                i++;
-
-                if (m_fnAppendMsg)
-                {
-                    std::stringstream ss;
-                    ss << sa[5] << "=" << rMap[sa[5]] << "\n";
-                    m_fnAppendMsg->AppendMsg(ss.str());
-                }
-            }
+            auto& rMap = m_cookicMap_resp[rt];
+            cookieToMap(curl, rMap);
         }
 
         bool bRet = false;
@@ -1180,6 +1305,8 @@ private:
     std::string     m_product_id = "4530956155944";//"4530956593920";
     std::string     m_sResponse;
 
+    std::string     m_keepchecking;
+
     std::string     m_data_select_gateway;
     std::string     m_payment;
 
@@ -1193,5 +1320,7 @@ private:
     IReportMsg *  m_fnAppendMsg = nullptr;
 
     bool            m_bUseProxyAgent = true;
+
+
 };
 

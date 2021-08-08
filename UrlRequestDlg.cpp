@@ -203,6 +203,8 @@ BOOL CUrlRequestDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 
+	((CButton*)GetDlgItem(IDC_RADIO1))->SetCheck(1);
+
 	USES_CONVERSION;
     SetDlgItemText(IDC_EDIT_USERNAME, A2T(g_username));
     SetDlgItemText(IDC_EDIT_PWD, A2T(g_userpsd));
@@ -266,9 +268,7 @@ std::string g_urls[] = {
 };
 
 
-#define RequestMode_Get		0
-#define RequestMode_Post	1
-bool g_request_mode = RequestMode_Get;
+bool g_request_mode = 1;
 
 
 CString			g_valueKey;
@@ -315,14 +315,7 @@ bool DoRequest(std::string& strUrl, std::string& sRet)
 	";
 
 	curl_easy_setopt(curl, CURLOPT_URL, strUrl.c_str());
-	if (0 && g_request_mode == RequestMode_Get)
-	{
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
-	}
-	else
-	{
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-	}
+
 	//	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
 	g_valueKey = L"0123";
@@ -389,8 +382,7 @@ bool CUrlRequestDlg::DoRequest2(std::string & sRet)
 
 int CUrlRequestDlg::GetRequestMode()
 {
-	g_request_mode = IsDlgButtonChecked(IDC_RADIO1) ? RequestMode_Get : RequestMode_Post;
-	return m_nRequestMode;
+	return IsDlgButtonChecked(IDC_RADIO1) ? 1 : 0;
 }
 
 void CUrlRequestDlg::OnDecodeMsg(const CString & strMsg)
@@ -529,6 +521,8 @@ void CUrlRequestDlg::OnBnClickedButtonLogin()
 
 	GetDlgItemText(IDC_EDIT_USERNAME, su);
 	GetDlgItemText(IDC_EDIT_PWD, sw);
+
+	m_mr.UseProxyAgent(GetRequestMode());
 	
 	USES_CONVERSION;
 	m_mr.SetLoginInfo(W2A(su), W2A(sw));
@@ -558,9 +552,11 @@ void CUrlRequestDlg::OnBnClickedButtonAddcart()
 void CUrlRequestDlg::OnBnClickedButtonCheckout()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	m_mr.DoRequest(RType::eCart2);
-	m_mr.DoRequest(RType::eCheckouts);
-	m_mr.DoRequest(RType::eCheckouts_contact_info);
+	if (m_mr.DoRequest(RType::eCart2))
+	{
+        if(m_mr.DoRequest(RType::eCheckouts))
+			m_mr.DoRequest(RType::eCheckouts_contact_info);
+	}
 }
 
 

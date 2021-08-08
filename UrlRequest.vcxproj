@@ -76,14 +76,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\lib;D:\sdk\zlib-1.2.11\build2015\Release;$(LibraryPath)</LibraryPath>
-    <IncludePath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\include;D:\sdk\zlib-1.2.11;$(IncludePath)</IncludePath>
+    <IncludePath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\include;D:\sdk\zlib-1.2.11;$(QAX_3RDPARTY_LIBRARY_ROOT)\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\include;D:\sdk\zlib-1.2.11;$(IncludePath)</IncludePath>
+    <IncludePath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\include;D:\sdk\zlib-1.2.11;$(QAX_3RDPARTY_LIBRARY_ROOT)\;$(IncludePath)</IncludePath>
     <LibraryPath>D:\sdk\curl-7.67.0\builds\libcurl-vc19-x86-release-dll-ssl-static\lib;D:\sdk\zlib-1.2.11\build2015\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
